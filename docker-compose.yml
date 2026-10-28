@@ -1,0 +1,134 @@
+services:
+  # 1. PostgreSQL Database for User & Document Metadata
+  postgres:
+    image: postgres:16-alpine
+    container_name: rag-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rag_gateway}
+      POSTGRES_USER: ${POSTGRES_USER:-rag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rag} -d ${POSTGRES_DB:-rag_gateway}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - rag-network
+
+  # 2. Python FastAPI RAG Service (Embeddings, ChromaDB, Reranker, QA)
+  rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.rag
+    container_name: rag-service
+    restart: unless-stopped
+    environment:
+      RAG_VECTOR_BACKEND: ${RAG_VECTOR_BACKEND:-chroma}
+      CHROMA_PERSIST_DIR: /app/chroma_db
+      CHROMA_COLLECTION_NAME: rag_chunks
+      RAG_DOCUMENTS_DIR: /app/documents
+      RAG_DOCUMENTS_REGISTRY: /app/documents/registry.json
+      RAG_EMBEDDING_MODEL: ${RAG_EMBEDDING_MODEL:-sentence-transformers/all-mpnet-base-v2}
+      RAG_RERANKER_MODEL: ${RAG_RERANKER_MODEL:-cross-encoder/ms-marco-MiniLM-L-6-v2}
+      RAG_MODEL_LOCAL_FILES_ONLY: ${RAG_MODEL_LOCAL_FILES_ONLY:-false}
+      RAG_LLM_PROVIDER: ${RAG_LLM_PROVIDER:-extractive}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
+      HF_HOME: /root/.cache/huggingface
+    ports:
+      - "${RAG_SERVICE_PORT:-8000}:8000"
+    volumes:
+      - chroma_data:/app/chroma_db
+      - documents_data:/app/documents
+      - hf_cache:/root/.cache/huggingface
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - rag-network
+
+  # 3. Spring Boot API Gateway (Auth, Rate Limiting, Document Metadata, SSE Proxy)
+  gateway:
+    build:
+      context: ./backend-spring
+      dockerfile: Dockerfile
+    container_name: rag-gateway
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rag-service:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-rag_gateway}
+      DATABASE_USERNAME: ${POSTGRES_USER:-rag}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-rag}
+      RAG_SERVICE_BASE_URL: http://rag-service:8000
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me-32-byte-secret-key}
+      JWT_TOKEN_TTL: ${JWT_TOKEN_TTL:-1h}
+      JWT_DEMO_USERNAME: ${JWT_DEMO_USERNAME:-demo}
+      JWT_DEMO_PASSWORD: ${JWT_DEMO_PASSWORD:-demo123}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_CAPACITY: ${RATE_LIMIT_CAPACITY:-30}
+      RATE_LIMIT_REFILL_TOKENS: ${RATE_LIMIT_REFILL_TOKENS:-30}
+      RATE_LIMIT_REFILL_PERIOD: ${RATE_LIMIT_REFILL_PERIOD:-1m}
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - rag-network
+
+  # 4. Next.js Chat Web UI
+  frontend:
+    build:
+      context: ./frontend-next
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_healthy
+    environment:
+      SPRING_GATEWAY_URL: http://gateway:8080
+      PORT: 3000
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+    networks:
+      - rag-network
+
+volumes:
+  postgres_data:
+    name: rag_postgres_data
+  chroma_data:
+    name: rag_chroma_data
+  documents_data:
+    name: rag_documents_data
+  hf_cache:
+    name: rag_hf_cache
+
+networks:
+  rag-network:
+    name: rag_network
+    driver: bridge

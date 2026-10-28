@@ -1,0 +1,585 @@
+{
+  "info": {
+    "_postman_id": "c0628694-a51b-4e57-a714-858c97d88000",
+    "name": "Full-Stack RAG Pipeline E2E",
+    "description": "Complete End-to-End Postman testing suite for the Full-Stack RAG Chat Application (Spring Boot API Gateway, FastAPI RAG Service, ChromaDB, and PostgreSQL).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "gateway_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "rag_service_url",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "document_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Checks",
+      "item": [
+        {
+          "name": "Gateway Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/actuator/health",
+              "host": ["{{gateway_url}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Public Actuator endpoint reporting gateway health and PostgreSQL connectivity."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Gateway is UP\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"UP\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "FastAPI RAG Service Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rag_service_url}}/health",
+              "host": ["{{rag_service_url}}"],
+              "path": ["health"]
+            },
+            "description": "Internal FastAPI health check reporting vector index status and device."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"RAG Service is OK\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"ok\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication & JWT",
+      "item": [
+        {
+          "name": "Register New User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/register",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Registers a new user in PostgreSQL with BCrypt password hashing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 400 (if already registered)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Generate JWT Bearer Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"demo\",\n  \"password\": \"demo123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/auth/token",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "auth", "token"]
+            },
+            "description": "Authenticates user and returns a signed HMAC-SHA256 JWT bearer token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns valid Bearer token\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.accessToken).to.be.a('string');",
+                  "    pm.expect(jsonData.tokenType).to.eql('Bearer');",
+                  "    pm.collectionVariables.set(\"jwt_token\", jsonData.accessToken);",
+                  "    console.log(\"Stored JWT token in collection variable: jwt_token\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Unauthorized Request Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway_url}}/api/documents",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Verifies that protected endpoints return 401 Unauthorized when no token is supplied."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Document Ingestion & Management",
+      "item": [
+        {
+          "name": "Upload Document (PDF / TXT / Markdown)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Upload a PDF, TXT, or Markdown document file"
+                },
+                {
+                  "key": "source",
+                  "value": "postman-test-document",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/documents/upload",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "documents", "upload"]
+            },
+            "description": "Uploads document file to gateway, parses pages, hashes content for deduplication, and queues async indexing in ChromaDB."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Upload status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.document_id) {",
+                  "    pm.collectionVariables.set(\"document_id\", jsonData.document_id);",
+                  "    console.log(\"Saved document_id: \" + jsonData.document_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List User Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/documents",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "documents"]
+            },
+            "description": "Lists all documents uploaded by the authenticated user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns documents list\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.documents).to.be.an('array');",
+                  "    if (jsonData.documents.length > 0 && !pm.collectionVariables.get(\"document_id\")) {",
+                  "        pm.collectionVariables.set(\"document_id\", jsonData.documents[0].document_id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Document Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/documents/{{document_id}}",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Retrieves metadata and indexing status (processing, indexed, or failed) for a specific document."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Document has valid structure\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.document_id).to.eql(pm.collectionVariables.get(\"document_id\"));",
+                  "    pm.expect(jsonData.status).to.be.oneOf([\"processing\", \"indexed\", \"failed\"]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. RAG Chat & Retrieval",
+      "item": [
+        {
+          "name": "Ask Question (Synchronous Grounded QA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"How does RAG reduce hallucination?\",\n  \"topK\": 3,\n  \"filters\": {}\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/chat",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Performs dense ChromaDB vector search + cross-encoder reranking and constructs a cited Markdown answer."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Answer contains citations and confidence\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.answer).to.be.a('string');",
+                  "    pm.expect(jsonData.citations).to.be.an('array');",
+                  "    pm.expect(jsonData.confidence).to.be.a('number');",
+                  "});",
+                  "pm.test(\"Rate limit headers present\", function () {",
+                  "    pm.response.to.have.header('X-RateLimit-Limit');",
+                  "    pm.response.to.have.header('X-RateLimit-Remaining');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ask Question with Document Filter",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Summarize the uploaded document.\",\n  \"topK\": 5,\n  \"filters\": {\n    \"document_id\": \"{{document_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/chat",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Queries vector index filtering exclusively to the specified document ID."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stream Chat (SSE Server-Sent Events)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Explain chunking in retrieval pipelines\",\n  \"topK\": 3,\n  \"filters\": {}\n}"
+            },
+            "url": {
+              "raw": "{{gateway_url}}/api/chat/stream",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "chat", "stream"]
+            },
+            "description": "Streams response tokens using Server-Sent Events (SSE) via Java 21 virtual threads."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Content-Type is text/event-stream\", function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/event-stream');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Direct RAG Service (Port 8000)",
+      "item": [
+        {
+          "name": "Vector Index Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{rag_service_url}}/index/status",
+              "host": ["{{rag_service_url}}"],
+              "path": ["index", "status"]
+            },
+            "description": "Directly checks ChromaDB collection size and embedding dimension."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Reports chunk count\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.chunk_count).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct Vector Retrieval Only",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"large language model context window\",\n  \"top_k\": 3,\n  \"filters\": {}\n}"
+            },
+            "url": {
+              "raw": "{{rag_service_url}}/retrieve",
+              "host": ["{{rag_service_url}}"],
+              "path": ["retrieve"]
+            },
+            "description": "Returns raw retrieved chunk candidates, dense scores, and rerank scores without calling the LLM."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns top candidates\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.results).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Cleanup & Delete",
+      "item": [
+        {
+          "name": "Delete Document",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gateway_url}}/api/documents/{{document_id}}",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "documents", "{{document_id}}"]
+            },
+            "description": "Removes document from PostgreSQL, deletes disk file, and purges vector chunks from ChromaDB."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

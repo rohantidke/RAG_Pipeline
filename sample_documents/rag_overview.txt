@@ -1,0 +1,23 @@
+# Retrieval-Augmented Generation (RAG) Architecture and Design
+
+Retrieval-Augmented Generation (RAG) is an artificial intelligence framework that enhances large language model (LLM) responses by referencing external, authoritative knowledge bases outside of its initial training data before generating a response.
+
+## Core Concepts
+
+1. Document Ingestion and Preprocessing
+Raw unstructured data such as PDF documents, markdown files, and plain text notes are parsed into clean text. Structural metadata like page numbers, headings, and character positions are preserved.
+
+2. Semantic Chunking Strategy
+Text is divided into semantically coherent chunks. Optimal chunking balances granularity and context. Page-aware chunking ensures that boundaries do not cut sentences across page transitions unnaturally.
+
+3. Dense Vector Embeddings
+Chunks are mapped into high-dimensional vector spaces using deep embedding models such as SentenceTransformers (e.g., all-mpnet-base-v2). These dense vectors capture semantic relationships where semantically similar texts reside close to each other.
+
+4. Vector Database Indexing
+Vector databases such as ChromaDB store chunk embeddings alongside rich metadata. Approximate Nearest Neighbor (ANN) search enables millisecond retrieval over millions of chunks.
+
+5. Hybrid Retrieval and Cross-Encoder Reranking
+First-stage vector search retrieves candidate chunks using cosine similarity. A second-stage cross-encoder reranker scores query-document pairs to maximize contextual precision.
+
+6. Grounded Answer Synthesis
+Retrieved context is injected into the LLM prompt. The generation layer either streams tokens directly from local models like Ollama (Llama 3) or uses high-fidelity extractive grounding to cite verifiable page-level references.

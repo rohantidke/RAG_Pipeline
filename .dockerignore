@@ -1,0 +1,20 @@
+.git
+.gitignore
+.venv
+venv*
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.vscode
+.idea
+*.log
+
+# Exclude backend and frontend subprojects from RAG service build context
+backend-spring/
+frontend-next/
+
+# Exclude local runtime data (these are mounted via Docker volumes)
+chroma_db/
+documents/

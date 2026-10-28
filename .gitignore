@@ -1,0 +1,64 @@
+# Python
+.pytest_cache/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv_py312/
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.docker.example
+!.env.docker
+!backend-spring/.env.example
+!frontend-next/.env.example
+
+# Generated app data
+*.pdf
+*.csv
+!sample_documents/**
+text_chunks_and_embeddings_df.csv
+reports/
+reports_*/
+/chroma_db/
+/documents/
+/backend-spring/data/
+/backend-spring/logs/
+backend-spring/*.log
+
+# Model cache
+.cache/
+models/
+
+# Java / Spring
+backend-spring/target/
+.mvn/
+*.class
+
+# Node / Next.js
+frontend-next/.next/
+frontend-next/node_modules/
+frontend-next/.npm-cache/
+frontend-next/out/
+frontend-next/*.log
+frontend-next/*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

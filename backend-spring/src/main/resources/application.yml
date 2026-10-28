@@ -1,0 +1,53 @@
+﻿server:
+  port: 8080
+
+spring:
+  application:
+    name: rag-spring-gateway
+  main:
+    web-application-type: servlet
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:5432/rag_gateway}
+    username: ${DATABASE_USERNAME:rag}
+    password: ${DATABASE_PASSWORD:rag}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:50MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:50MB}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  file:
+    name: logs/spring.log
+
+rag:
+  service:
+    base-url: ${RAG_SERVICE_BASE_URL:http://127.0.0.1:8000}
+    request-timeout: ${RAG_SERVICE_TIMEOUT:60s}
+
+gateway:
+  security:
+    issuer: ${JWT_ISSUER:rag-spring-gateway}
+    jwt-secret: ${JWT_SECRET:dev-only-change-me-32-byte-secret-key}
+    token-ttl: ${JWT_TOKEN_TTL:1h}
+    demo-username: ${JWT_DEMO_USERNAME:demo}
+    demo-password: ${JWT_DEMO_PASSWORD:demo123}
+    seed-demo-user: ${JWT_SEED_DEMO_USER:true}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    capacity: ${RATE_LIMIT_CAPACITY:30}
+    refill-tokens: ${RATE_LIMIT_REFILL_TOKENS:30}
+    refill-period: ${RATE_LIMIT_REFILL_PERIOD:1m}

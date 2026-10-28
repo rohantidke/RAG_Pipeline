@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Retrieve Augmented Generation Architecture</title>
+  <desc id="desc">Monochrome black theme architecture diagram for a Next.js frontend, Spring Boot API gateway, FastAPI RAG service, PostgreSQL metadata store, ChromaDB vector store, SentenceTransformer embeddings, and LLM fallback.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f4f4f5"/>
+    </marker>
+    <style>
+      .bg { fill: #050505; }
+      .title { fill: #f8fafc; font: 700 44px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+      .subtitle { fill: #d4d4d8; font: 400 20px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+      .group { fill: #0a0a0b; stroke: #f4f4f5; stroke-width: 2.2; }
+      .group-title { fill: #f8fafc; font: 700 23px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+      .group-subtitle { fill: #d4d4d8; font: 400 15px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+      .node { fill: #111113; stroke: #f4f4f5; stroke-width: 2; }
+      .db { fill: #0d0d0e; stroke: #f4f4f5; stroke-width: 2; }
+      .node-text { fill: #f8fafc; font: 600 20px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+      .node-subtext { fill: #d4d4d8; font: 400 15px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+      .line { fill: none; stroke: #f4f4f5; stroke-width: 2.5; marker-end: url(#arrow); }
+      .thin-line { fill: none; stroke: #a1a1aa; stroke-width: 2; marker-end: url(#arrow); }
+      .return-line { fill: none; stroke: #d4d4d8; stroke-width: 2.2; stroke-dasharray: 8 8; marker-end: url(#arrow); }
+      .label { fill: #d4d4d8; font: 500 14px Arial, Helvetica, sans-serif; letter-spacing: 0; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1920" height="1080"/>
+  <text class="title" x="72" y="72">RAG Application Architecture</text>
+  <text class="subtitle" x="72" y="106">Next.js frontend -> Spring Boot gateway -> FastAPI RAG service -> vector and model layer</text>
+
+  <!-- User -->
+  <rect class="node" x="72" y="252" width="250" height="96" rx="8"/>
+  <text class="node-text" x="197" y="292" text-anchor="middle">User</text>
+  <text class="node-subtext" x="197" y="322" text-anchor="middle">Browser / Postman</text>
+
+  <!-- Frontend -->
+  <rect class="group" x="394" y="164" width="330" height="744" rx="8"/>
+  <text class="group-title" x="559" y="205" text-anchor="middle">Next.js Frontend</text>
+  <rect class="node" x="438" y="248" width="242" height="70" rx="8"/>
+  <text class="node-text" x="559" y="291" text-anchor="middle">Black Chat UI</text>
+  <rect class="node" x="438" y="362" width="242" height="70" rx="8"/>
+  <text class="node-text" x="559" y="390" text-anchor="middle">/api/token</text>
+  <text class="node-subtext" x="559" y="414" text-anchor="middle">/api/register</text>
+  <rect class="node" x="438" y="476" width="242" height="70" rx="8"/>
+  <text class="node-text" x="559" y="504" text-anchor="middle">/api/documents</text>
+  <text class="node-subtext" x="559" y="528" text-anchor="middle">proxy</text>
+  <rect class="node" x="438" y="590" width="242" height="70" rx="8"/>
+  <text class="node-text" x="559" y="618" text-anchor="middle">/api/chat</text>
+  <text class="node-subtext" x="559" y="642" text-anchor="middle">proxy</text>
+  <rect class="node" x="438" y="704" width="242" height="70" rx="8"/>
+  <text class="node-text" x="559" y="732" text-anchor="middle">/api/chat/stream</text>
+  <text class="node-subtext" x="559" y="756" text-anchor="middle">streaming proxy</text>
+
+  <!-- Gateway -->
+  <rect class="group" x="796" y="164" width="364" height="744" rx="8"/>
+  <text class="group-title" x="978" y="205" text-anchor="middle">Spring Boot API Gateway</text>
+  <rect class="node" x="846" y="248" width="264" height="70" rx="8"/>
+  <text class="node-text" x="978" y="291" text-anchor="middle">Register / Login</text>
+  <rect class="node" x="846" y="362" width="264" height="70" rx="8"/>
+  <text class="node-text" x="978" y="405" text-anchor="middle">JWT Validation</text>
+  <rect class="node" x="846" y="476" width="264" height="70" rx="8"/>
+  <text class="node-text" x="978" y="519" text-anchor="middle">Rate Limiting</text>
+  <rect class="node" x="846" y="590" width="264" height="70" rx="8"/>
+  <text class="node-text" x="978" y="633" text-anchor="middle">Document API</text>
+  <rect class="node" x="846" y="704" width="264" height="70" rx="8"/>
+  <text class="node-text" x="978" y="747" text-anchor="middle">Chat API</text>
+  <path class="db" d="M 846 828 C 846 808 1110 808 1110 828 L 1110 868 C 1110 888 846 888 846 868 Z"/>
+  <ellipse class="db" cx="978" cy="828" rx="132" ry="20"/>
+  <text class="node-text" x="978" y="854" text-anchor="middle">PostgreSQL</text>
+  <text class="node-subtext" x="978" y="879" text-anchor="middle">metadata</text>
+
+  <!-- RAG Service -->
+  <rect class="group" x="1232" y="164" width="334" height="744" rx="8"/>
+  <text class="group-title" x="1399" y="205" text-anchor="middle">Python RAG Service</text>
+  <text class="group-subtitle" x="1399" y="230" text-anchor="middle">FastAPI</text>
+  <rect class="node" x="1276" y="260" width="246" height="62" rx="8"/>
+  <text class="node-text" x="1399" y="298" text-anchor="middle">Upload Validation</text>
+  <rect class="node" x="1276" y="366" width="246" height="62" rx="8"/>
+  <text class="node-text" x="1399" y="404" text-anchor="middle">Async Indexing</text>
+  <rect class="node" x="1276" y="472" width="246" height="62" rx="8"/>
+  <text class="node-text" x="1399" y="510" text-anchor="middle">Page-aware Chunking</text>
+  <rect class="node" x="1276" y="578" width="246" height="62" rx="8"/>
+  <text class="node-text" x="1399" y="616" text-anchor="middle">Similarity Retrieval</text>
+  <rect class="node" x="1276" y="684" width="246" height="62" rx="8"/>
+  <text class="node-text" x="1399" y="722" text-anchor="middle">Prompt Construction</text>
+  <rect class="node" x="1276" y="790" width="246" height="62" rx="8"/>
+  <text class="node-text" x="1399" y="813" text-anchor="middle">Markdown Answer</text>
+  <text class="node-subtext" x="1399" y="837" text-anchor="middle">formatting</text>
+
+  <!-- Vector and model layer -->
+  <rect class="group" x="72" y="940" width="1776" height="94" rx="8"/>
+  <text class="group-title" x="214" y="999" text-anchor="middle">Vector + Model Layer</text>
+  <path class="db" d="M 428 970 C 428 950 676 950 676 970 L 676 1004 C 676 1024 428 1024 428 1004 Z"/>
+  <ellipse class="db" cx="552" cy="970" rx="124" ry="20"/>
+  <text class="node-text" x="552" y="1001" text-anchor="middle">ChromaDB</text>
+  <rect class="node" x="796" y="956" width="292" height="58" rx="8"/>
+  <text class="node-text" x="942" y="992" text-anchor="middle">SentenceTransformer</text>
+  <rect class="node" x="1208" y="956" width="292" height="58" rx="8"/>
+  <text class="node-text" x="1354" y="980" text-anchor="middle">Extractive Fallback</text>
+  <text class="node-subtext" x="1354" y="1003" text-anchor="middle">or Ollama</text>
+
+  <!-- Primary request flow -->
+  <path class="line" d="M 322 300 H 438"/>
+  <path class="thin-line" d="M 559 318 V 362"/>
+  <path class="thin-line" d="M 559 432 V 476"/>
+  <path class="thin-line" d="M 559 546 V 590"/>
+  <path class="thin-line" d="M 559 660 V 704"/>
+
+  <path class="line" d="M 680 397 H 846"/>
+  <text class="label" x="763" y="382" text-anchor="middle">auth</text>
+  <path class="line" d="M 680 511 H 762 V 397 H 846"/>
+  <path class="line" d="M 680 625 H 762 V 397 H 846"/>
+  <path class="line" d="M 680 739 H 762 V 397 H 846"/>
+  <text class="label" x="748" y="488" text-anchor="middle">secured API</text>
+
+  <path class="thin-line" d="M 978 318 V 362"/>
+  <path class="thin-line" d="M 978 432 V 476"/>
+  <path class="thin-line" d="M 978 546 V 590"/>
+  <path class="thin-line" d="M 978 660 V 704"/>
+  <path class="thin-line" d="M 978 774 V 808"/>
+
+  <path class="line" d="M 1110 625 H 1194 V 291 H 1276"/>
+  <text class="label" x="1188" y="273" text-anchor="end">upload</text>
+  <path class="line" d="M 1110 739 H 1276"/>
+  <text class="label" x="1193" y="724" text-anchor="middle">query</text>
+
+  <path class="thin-line" d="M 1399 322 V 366"/>
+  <path class="thin-line" d="M 1399 428 V 472"/>
+  <path class="thin-line" d="M 1399 534 V 578"/>
+  <path class="thin-line" d="M 1399 640 V 684"/>
+  <path class="thin-line" d="M 1399 746 V 790"/>
+
+  <!-- Vector and model dependencies -->
+  <path class="thin-line" d="M 1399 852 V 940"/>
+
+  <!-- Response flow -->
+  <path class="return-line" d="M 1276 821 H 1168 V 739 H 1110"/>
+  <path class="return-line" d="M 846 739 H 744 V 283 H 680"/>
+  <text class="label" x="739" y="266" text-anchor="middle">answer stream</text>
+</svg>

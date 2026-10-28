@@ -1,0 +1,53 @@
+[
+  {
+    "id": "g1",
+    "query": "What is a large language model?",
+    "expected_keywords": ["language model", "tokens", "generation"],
+    "expected_answer_contains": ["language model"],
+    "expected_chunk_ids": [],
+    "must_abstain": false
+  },
+  {
+    "id": "g2",
+    "query": "Why is chunking important in a RAG pipeline?",
+    "expected_keywords": ["chunk", "context window", "retrieval"],
+    "expected_answer_contains": ["chunk", "retrieval"],
+    "expected_chunk_ids": [],
+    "must_abstain": false
+  },
+  {
+    "id": "g3",
+    "query": "What is the difference between dot product and cosine similarity?",
+    "expected_keywords": ["dot product", "cosine", "similarity"],
+    "expected_answer_contains": ["cosine similarity"],
+    "expected_chunk_ids": [],
+    "must_abstain": false
+  },
+  {
+    "id": "g4",
+    "query": "How does RAG reduce hallucination?",
+    "expected_keywords": ["retrieval", "grounded", "context"],
+    "expected_answer_contains": ["grounded", "context"],
+    "expected_chunk_ids": [],
+    "must_abstain": false
+  },
+  {
+    "id": "g5",
+    "query": "What are text embeddings used for?",
+    "expected_keywords": ["embedding", "semantic", "search"],
+    "expected_answer_contains": ["semantic search"],
+    "expected_chunk_ids": [],
+    "must_abstain": false
+  },
+  {
+    "id": "g6",
+    "query": "What is the warranty policy for my purchase?",
+    "expected_keywords": [],
+    "expected_answer_contains": [
+      "do not have enough grounded evidence",
+      "not present"
+    ],
+    "expected_chunk_ids": [],
+    "must_abstain": true
+  }
+]

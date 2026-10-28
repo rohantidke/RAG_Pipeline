@@ -1,0 +1,48 @@
+# Core Dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
+# Transformers & NLP
+transformers>=4.38.0
+sentence-transformers>=2.5.0
+accelerate>=0.27.0
+sentencepiece>=0.2.0
+safetensors>=0.4.0
+huggingface-hub>=0.20.0
+
+# PDF Processing
+PyMuPDF>=1.23.0
+
+# NLP Tools
+nltk>=3.8
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+matplotlib>=3.8.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.25.0
+ipywidgets>=8.1.0
+
+# Utilities
+tqdm>=4.66.0
+requests>=2.31.0
+typing-extensions>=4.9.0
+rank-bm25>=0.2.2
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-multipart>=0.0.20
+pytest>=8.0.0
+httpx>=0.26.0
+chromadb>=0.5.0
+
+# Optional (for production enhancements)
+# bitsandbytes>=0.43.0      # Quantization; install with install_requirements.ps1 -InstallBitsAndBytes
+# gradio>=4.0.0           # Web UI
+# faiss-cpu>=1.7.4        # Alternative vector database (CPU)
+# faiss-gpu>=1.7.4        # Alternative vector database (GPU)
+

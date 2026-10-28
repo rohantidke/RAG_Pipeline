@@ -1,0 +1,42 @@
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    RAG_DOCUMENTS_DIR=/app/documents \
+    RAG_DOCUMENTS_REGISTRY=/app/documents/registry.json \
+    CHROMA_PERSIST_DIR=/app/chroma_db
+
+# Install system utilities including curl for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install PyTorch CPU first for lightweight, portable image
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Copy requirements and install python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application source code
+COPY advanced_rag.py .
+COPY golden_test_set.json .
+COPY evaluate_rag.py .
+COPY rag_service/ ./rag_service/
+
+# Create runtime directories
+RUN mkdir -p /app/documents /app/chroma_db
+
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Start FastAPI application
+CMD ["uvicorn", "rag_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
